@@ -24,5 +24,7 @@
 
 .header {
     border-bottom: 1px solid #ececec;
+    display: flex;
+    justify-content: space-between;
 }
 </style>

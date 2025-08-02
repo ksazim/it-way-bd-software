@@ -2,14 +2,16 @@
 import { ref, defineProps, defineEmits, onMounted, computed, watch, onBeforeUnmount  } from "vue";
 import Success from "@/components/modal/notification/SuccessComponent";
 import Warning from "@/components/modal/notification/WarningComponent";
+import { useCrudStore } from '@/store/crud'
 
-const emit = defineEmits(["paginate", "removeRow"]);
+const emit = defineEmits(["paginate", "removeRow", "restoreRow"]);
 const paginate = ref(10);
 
 // const confirmation = ref(false);
 const modal = ref(false);
 const modalData = ref({});
 const confirmation = ref(false)
+const crudStore = useCrudStore()
 
 const props = defineProps({
   list: Object,
@@ -29,6 +31,11 @@ function closeDropdown(event) {
 
 const options = [10, 25, 50, 75, 100];
 
+function restoreRow(data) {
+  crudStore.newData('restore-trash-item', {id: data.id})
+  confirmation.value = true
+  emit('restoreRow')
+}
 
 function removeRow(data) {
   modal.value = true;
@@ -130,6 +137,7 @@ watch(paginate, (newValue) => {
               <router-link class="action-btn" v-if="data && action.edit == true" :to="action.link + data.id">
                 <font-awesome-icon style="color: #00bcd4" :icon="['fas', 'pen-to-square']" />
               </router-link>
+              <font-awesome-icon class="action-btn" v-if="action.restore == true" @click="restoreRow(data)" style="color: #1cb621" :icon="['fas', 'trash-can-arrow-up']" />
               <font-awesome-icon class="action-btn" v-if="action.delete == true" @click="removeRow(data)" style="color: #ff4949" :icon="['fas', 'trash']" />
               <router-link class="action-btn" v-if="data && action.view == true" :to="action.link + data.id">
                 <font-awesome-icon style="color: #49adff" :icon="['fas', 'eye']"/>
@@ -185,7 +193,7 @@ watch(paginate, (newValue) => {
   </div> 
   <Success @off-modal="closeModal" v-if="confirmation==true">
       <div>
-          <p>{{ confirmationMsg }}</p>
+          <p>The Action was Successful !</p>
       </div>
   </Success>
   <Warning @off-modal="closeModal" v-if="modal==true">

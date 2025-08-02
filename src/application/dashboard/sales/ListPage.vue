@@ -7,37 +7,36 @@ import { onMounted, ref, onUnmounted } from 'vue'
 import { usePaginationStore } from '@/store/pagination'
 
 import { useCrudStore } from '@/store/crud'
+import { useSystemStore } from '@/store/system'
+import SelectComponent from '@/components/form/SelectComponent.vue'
 
 const crudStore = useCrudStore()
+const systemStore = useSystemStore()
 // const authStore = useAuthStore()
 const paginationStore = usePaginationStore()
 
 const confirmationMsg = ref('')
 
-const columns = ['#ID', 'Case No', 'Title', 'Case Status']
+const columns = ['#ID', 'Customer', 'Product Description', 'Note', 'Total Amount']
 
 const actions = [
     {
-        edit: true,
-        link: '/category/edit/'
-    },
-    {
         delete: true,
-        link: '/category/delete/'
-    },
-    {
-        view: true,
-        link: '/category/delete/'
+        link: '/sale/delete/'
     }
 ]
 
-const searchCaseNo = ref('')
-const searchCaseTitle = ref('')
+const searchByCustomer = ref('')
+const searchByProduct = ref('')
+const searchByDateStarts = ref('')
+const searchByDateEnds = ref('')
 
 function refresh() {
-    crudStore.getAll('case-list/10/null/null').then(() => {
-        searchCaseNo.value = ''
-        searchCaseTitle.value = ''
+    crudStore.getAll('sales-list/10/null/null/null/null').then(() => {
+        searchByCustomer.value = ''
+        searchByProduct.value = ''
+        searchByDateStarts.value = ''
+        searchByDateEnds.value = ''
     })
 }
 
@@ -48,12 +47,20 @@ function paginate(val) {
         paginationStore.pageNo = val.page_no
     }
 
-    if(searchCaseNo.value  == '' || searchCaseNo.value  == 'null') {
-        searchCaseNo.value = null
+    if(searchByCustomer.value  == '' || searchByCustomer.value  == 'null') {
+        searchByCustomer.value = null
     }
 
-    if(searchCaseTitle.value  == '' || searchCaseTitle.value  == 'null') {
-        searchCaseTitle.value = null
+    if(searchByProduct.value  == '' || searchByProduct.value  == 'null') {
+        searchByProduct.value = null
+    }
+
+    if(searchByDateStarts.value  == '' || searchByDateStarts.value  == 'null') {
+        searchByDateStarts.value = null
+    }
+
+    if(searchByDateEnds.value  == '' || searchByDateEnds.value  == 'null') {
+        searchByDateEnds.value = null
     }
 
     loadAfterAction()
@@ -62,29 +69,31 @@ function paginate(val) {
 // Deleting a row
 
 async function axeRow(id) {
-    crudStore.destroy('case-list/delete/', id).then(() => {
+    crudStore.destroy('delete-sale/', id).then(() => {
         loadAfterAction()
-        crudStore.getAll('case-list/10/null/null')
-        confirmationMsg.value = 'Row Deleted Successfully !'
+        crudStore.getAll('sales-list/10/null/null/null/null')
+        confirmationMsg.value = 'Sale Deleted Successfully !'
     })
 }
 
 async function loadAfterAction() {
-    if(searchCaseTitle.value !== null || searchCaseNo.value !== null) {
+    if(searchByProduct.value !== null || searchByCustomer.value !== null || searchByDateStarts.value !== null || searchByDateEnds.value !== null) {
         paginationStore.pageNo = null
     }
 
     if(paginationStore.pageNo != null) {
-        await crudStore.getAll('case-list/'+paginationStore.itemPerPage+'/'+searchCaseNo.value+'/'+searchCaseTitle.value+paginationStore.pageNo)
+        await crudStore.getAll('sales-list/'+paginationStore.itemPerPage+'/'+searchByCustomer.value+'/'+searchByProduct.value+'/'+searchByDateStarts.value+'/'+searchByDateEnds.value+paginationStore.pageNo)
     } else if(paginationStore.itemPerPage === undefined) {
-        await crudStore.getAll('case-list/'+10+'/'+searchCaseNo.value+'/'+searchCaseTitle.value)
+        await crudStore.getAll('sales-list/'+10+'/'+searchByCustomer.value+'/'+searchByProduct.value+'/'+searchByDateStarts.value+'/'+searchByDateEnds.value)
     } else {
-        await crudStore.getAll('case-list/'+paginationStore.itemPerPage+'/'+searchCaseNo.value+'/'+searchCaseTitle.value)
+        await crudStore.getAll('sales-list/'+paginationStore.itemPerPage+'/'+searchByCustomer.value+'/'+searchByProduct.value+'/'+searchByDateStarts.value+'/'+searchByDateEnds.value)
     }
 }
 
 onMounted(async () => {
-    crudStore.getAll('case-list/10/null/null')
+    crudStore.getAll('sales-list/10/null/null/null/null')
+    systemStore.getCustomerList()
+    systemStore.getProductList(systemStore.selectedItems)
 })
 
 onUnmounted(() => {
@@ -95,17 +104,30 @@ onUnmounted(() => {
 <template>
     <div class="component dashboard-topbar">
         <div class="section-info text-center light-blue">
-            <h3 class="dancing-script page-title">Case List</h3>
+            <h3 class="dancing-script page-title">Sale List</h3>
         </div>
-        <router-link class="add-btn" to="create-case"> <font-awesome-icon :icon="['fas', 'circle-plus']" /></router-link>
+        <router-link class="add-btn" to="/dashboard/sales/create"> <font-awesome-icon :icon="['fas', 'circle-plus']" /></router-link>
     </div>
 
-    <div class="filter">
-        <InputComponent v-model="searchCaseNo" :placeholder="'Search by Case No'" />
-        <InputComponent v-model="searchCaseTitle" :placeholder="'Search by Case Title'" />
+    <div v-if="systemStore.customers != '' && systemStore.products != ''" class="filter">
+        <SelectComponent 
+        :defaultValue="searchByCustomer" 
+        v-model="searchByCustomer" 
+        :placeholder="'Select Customer'" 
+        :list="systemStore.customers" 
+        />
+        <SelectComponent 
+        :defaultValue="searchByProduct" 
+        v-model="searchByProduct" 
+        :placeholder="'Search By Product'" 
+        :list="systemStore.products" 
+        />
+        <InputComponent :type="'date'" v-model="searchByDateStarts" />
+        <InputComponent :type="'date'" v-model="searchByDateEnds" />
         <ButtonMedium @click="paginate" :label="'Search'" :backgroundColor="'green'" :color="'white'" />
         <font-awesome-icon @click="refresh()" class="refresh" :icon="['fas', 'refresh']" />
     </div>
+    <div v-else> Loading ... </div>
     <div class="tb-container">
         <Table @remove-row="axeRow" @paginate="paginate" :pagination="crudStore.getAllDataPagination" :confirmationMsg="confirmationMsg" :list="crudStore.getAllData" :columns="columns" :actions="actions" />
     </div>

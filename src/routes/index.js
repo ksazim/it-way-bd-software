@@ -21,21 +21,29 @@ const routes = [
         path: '/dashboard',
         name: 'dashboardPage',
         component: () => import('@/application/dashboard/dashboardPage'),
-        meta: { layout: adminPanelLayout, requiresAuth: false }
+        meta: { layout: adminPanelLayout, requiresAuth: true }
     },
 
-    // Cases
+    // Sales
     {
-        path: '/case-list',
-        name: 'CaseList',
-        component: () => import('@/application/dashboard/cases/ListPage'),
-        meta: { layout: adminPanelLayout, requiresAuth: false }
+        path: '/dashboard/sales',
+        name: 'SalesList',
+        component: () => import('@/application/dashboard/sales/ListPage'),
+        meta: { layout: adminPanelLayout, requiresAuth: true }
     },
     {
-        path: '/create-case',
-        name: 'CreateCase',
-        component: () => import('@/application/dashboard/cases/CreatePage'),
-        meta: { layout: adminPanelLayout, requiresAuth: false }
+        path: '/dashboard/sales/create',
+        name: 'CreateSales',
+        component: () => import('@/application/dashboard/sales/CreatePage'),
+        meta: { layout: adminPanelLayout, requiresAuth: true }
+    },
+
+    // Trash
+    {
+        path: '/dashboard/trashes',
+        name: 'TrashList',
+        component: () => import('@/application/dashboard/trash/ListPage'),
+        meta: { layout: adminPanelLayout, requiresAuth: true }
     },
 
     //Users
@@ -43,13 +51,13 @@ const routes = [
         path: '/dashboard/user-list',
         name: 'UserList',
         component: () => import('@/application/dashboard/users/ListPage'),
-        meta: { layout: adminPanelLayout, requiresAuth: false }
+        meta: { layout: adminPanelLayout, requiresAuth: true }
     },
     {
         path: '/create-user',
         name: 'CreateUser',
         component: () => import('@/application/dashboard/users/CreatePage'),
-        meta: { layout: adminPanelLayout, requiresAuth: false }
+        meta: { layout: adminPanelLayout, requiresAuth: true }
     },
 ]
 
@@ -58,21 +66,25 @@ var router = createRouter({
     routes
 })
 
-function authenticated() {
-    return true
+function isAuthenticated() {
+  return localStorage.getItem('token');
 }
-router.beforeEach(async (to, from, next) => {
-    const isAuthenticated = to.matched.some(record => record.meta.isAuthenticated)
 
-    if (isAuthenticated) {
-        if (authenticated()) {
-            return next({ name: 'AdminLoginPage' });
-        }
-    }
-    
-    next();
+router.beforeEach((to, from, next) => {
+  const isAuth = isAuthenticated();
+
+  const isLoginPage = to.name === 'AdminLoginPage';
+  const isProtectedRoute = to.matched.some(record => record.meta.requiresAuth);
+
+  if (!isAuth && isProtectedRoute) {
+    return next({ name: 'AdminLoginPage' });
+  }
+
+  if (isAuth && isLoginPage) {
+    return next({ name: 'dashboardPage' });
+  }
+  
+  next();
 });
-
-
 
 export default router

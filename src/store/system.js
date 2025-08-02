@@ -16,6 +16,11 @@ export const useSystemStore = defineStore('system', {
 
     modalOn: false,
     showSidebar: true,
+
+    customers: [],
+    products: [],
+
+    selectedItems: []
   }),
 
   getters: {
@@ -35,10 +40,10 @@ export const useSystemStore = defineStore('system', {
       })
     },
 
-    async getProductList(id) {
+    async getProductList(items) {
       const authStore = useAuthStore()
       axios.defaults.headers.common['Authorization'] = `Bearer ${authStore.token}`
-      await axios.get(process.env.VUE_APP_BASE_API_URL+'areas/'+id).then((response) => {
+      await axios.post(process.env.VUE_APP_BASE_API_URL+'products', { items: items }).then((response) => {
         this.products = response.data.list
       }).catch((errors) => {
         if(errors.status == 401) {
@@ -47,10 +52,10 @@ export const useSystemStore = defineStore('system', {
       })
     },
 
-    async getCustomerList(id) {
+    async getCustomerList() {
       const authStore = useAuthStore()
       axios.defaults.headers.common['Authorization'] = `Bearer ${authStore.token}`
-      await axios.get(process.env.VUE_APP_BASE_API_URL+'areas/'+id).then((response) => {
+      await axios.get(process.env.VUE_APP_BASE_API_URL+'customers').then((response) => {
         this.customers = response.data.list
       }).catch((errors) => {
         if(errors.status == 401) {

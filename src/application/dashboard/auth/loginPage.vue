@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useRouter } from 'vue-router';
 
 const router = useRouter()
-const baseApi = process.env.VUE_APP_BASE_API 
+const baseApi = process.env.VUE_APP_BASE_API_URL 
 
 const email = ref('')
 const password = ref('')

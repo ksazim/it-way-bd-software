@@ -101,7 +101,7 @@ export const useCrudStore = defineStore({
            try {
             const token = localStorage.getItem('token');
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-            return await axios.get(process.env.VUE_APP_BASE_API_URL+api+id)
+            return await axios.delete(process.env.VUE_APP_BASE_API_URL+api+id)
            } catch(e) {
             return e
            }

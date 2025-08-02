@@ -6,7 +6,7 @@
     <div class="header">
         <div class="container">     
             <router-link to="/home" class="logo">
-                <img class="primary-logo" src="@/assets/image/logo/bichar-achar-logo-white.png" width="180px" alt="">
+                IT Way BD ERP
             </router-link>
             
             <div class="navmenu">
@@ -39,14 +39,7 @@
 
 .logo {
     font-size: 25px;
-}
-
-.logo > img{
-    opacity: 0.7;
-}
-
-.logo > img:hover {
-    opacity: 1;
+    color: black;
 }
 
 .navmenu > div {
